@@ -1,13 +1,24 @@
 import Header from "../components/Header";
 import TabelaConsultas from "../components/TabelaConsultas";
 import NovaConsulta from "../components/NovaConsulta";
+import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-export default function ConsultasPage() {
-  const [usuario] = useState("");
+export default function ConsultasPage( {onLogout} ) {
+  const [usuario, setUsuario] = useState();
   const [consultas, setConsultas] = useState([]);
   const [modalAberto, setModalAberto] = useState(false);
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    const userData = localStorage.getItem("usuario");
+    if (userData) {
+      setUsuario(JSON.parse(userData));
+    } else {
+      navigate("/", { replace: true });
+    }
+  }, [navigate]);
 
   useEffect(() => {
     const buscarConsultas = async () => {
@@ -33,7 +44,12 @@ export default function ConsultasPage() {
     }
   };
 
-  const handleLogout = () => alert("Logout efetuado");
+  const handleLogout = () => {
+    localStorage.removeItem("usuario");
+    onLogout()
+    navigate("/", { replace: true });
+  };
+
 
   return (
     <div className="min-h-screen bg-gray-100">
