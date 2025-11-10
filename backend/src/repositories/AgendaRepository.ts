@@ -82,6 +82,12 @@ export class AgendaRepository {
         .first();
     }
 
+    async getByMedicoId(medico_id: number): Promise<Agenda[] | undefined> {
+        return db('agenda')
+            .where('agenda.medico_id', medico_id)
+            .select('*')
+    }
+
     async medicoExists(medico_id: number): Promise<boolean> {
         const result = await db("medico").where("id", medico_id).first();
         return !!result;
@@ -95,5 +101,53 @@ export class AgendaRepository {
     async deleteAgenda(id: number): Promise<number> {
         return db('agenda').where("id", id).delete();
     }
+
+    async getById(id: number): Promise<Agenda[]> {
+        return db('agenda').where('id', id).select('*');
+    }
+
+    async removerHorarioDaAgenda(medico_id: number, dia: string, horario: string): Promise<void> {
+        const agenda = await db('agenda')
+            .where({ medico_id, dia })
+            .first();
+
+        if (!agenda) return;
+
+        const horarios = Array.isArray(agenda.horarios)
+            ? agenda.horarios
+            : JSON.parse(agenda.horarios);
+            
+        const novosHorarios = horarios.filter((h: string) => h !== horario);
+
+        await db('agenda')
+            .where({ medico_id, dia })
+            .update({
+                horarios: `{${novosHorarios.join(',')}}`,
+            })
+    }
+
+    async adicionarHorarioNaAgenda(
+        medico_id: number,
+        dia: string,
+        horario: string
+        ): Promise<void> {
+        const agenda = await db('agenda')
+            .where({ medico_id, dia })
+            .first();
+
+        const horarios: string[] = Array.isArray(agenda.horarios)
+            ? agenda.horarios
+            : agenda.horarios.replace(/[{}]/g, '').split(',').filter(Boolean);
+
+        horarios.push(horario)
+        horarios.sort()
+
+        const postgresArray = `{${horarios.join(',')}}`;
+
+        await db('agenda')
+            .where({ medico_id, dia })
+            .update({ horarios: postgresArray });
+    }
+
 
 }

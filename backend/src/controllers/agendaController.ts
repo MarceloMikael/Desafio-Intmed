@@ -33,3 +33,25 @@ export const excluirAgenda = async (req: Request, res: Response) => {
     return res.status(404).json({ error: error.message });
   }
 };
+
+export const getByMedicoId = async (req: Request, res: Response) => {
+  try {
+    const id = Number(req.params.id);
+    const data = await agendaRepository.getByMedicoId(id);
+    return res.status(200).json({ message: "Agendas listadas com sucesso", data: data})
+  } catch (error: any) {
+    return res.status(404).json({ error: error.message });
+  }
+}
+
+export const getById = async (req: Request, res: Response) => {
+  try {
+    const id = Number(req.params.id);
+    const data = await agendaRepository.getById(id);
+    return res.status(200).json({ message: "Agendas listadas com sucesso", data: data})
+  } catch (error: any) {
+    return res.status(404).json({ error: error.message });
+  }
+}
+
+
