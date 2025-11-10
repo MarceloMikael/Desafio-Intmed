@@ -13,7 +13,7 @@ export default function Header({ user, onLogout }) {
 
         <div className="flex items-center gap-4" style={{ marginTop: "24px" }}>
             <span className="text-[#A8A8A8] font-medium text-[13px] w-[85px] h-[13px]">
-            {user}
+            {user?.nome}
             </span>
             <button
             onClick={onLogout}

@@ -101,8 +101,6 @@ export default function NovaConsulta({ onClose }) {
       <div className="absolute inset-0 bg-black opacity-40"></div>
       <div className="relative bg-white rounded shadow-lg p-6 w-[400px] z-10">
         <h2 className="text-xl font-bold mb-4 text-center">Nova Consulta</h2>
-
-        {/* Especialidade */}
         <div className="mb-4">
           <label className="block mb-1 font-medium">Especialidade</label>
           <select
@@ -118,8 +116,6 @@ export default function NovaConsulta({ onClose }) {
             ))}
           </select>
         </div>
-
-        {/* Médico */}
         <div className="mb-4">
           <label className="block mb-1 font-medium">Médico</label>
           <select
@@ -140,8 +136,6 @@ export default function NovaConsulta({ onClose }) {
             ))}
           </select>
         </div>
-
-        {/* Agenda */}
         <div className="mb-4">
           <label className="block mb-1 font-medium">Data</label>
           <select
@@ -162,8 +156,6 @@ export default function NovaConsulta({ onClose }) {
             ))}
           </select>
         </div>
-
-        {/* Horário */}
         <div className="mb-4">
           <label className="block mb-1 font-medium">Horário</label>
           <select
@@ -184,8 +176,6 @@ export default function NovaConsulta({ onClose }) {
             ))}
           </select>
         </div>
-
-        {/* Botões */}
         <div className="flex justify-end gap-2 mt-4">
           <button
             onClick={onClose}
