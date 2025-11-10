@@ -1,9 +1,11 @@
 import { Request, Response } from "express";
 import { MedicoRepository } from "../repositories/MedicoRepository";
 import { MedicoService } from "../services/MedicoService";
+import { EspecialidadeRepository } from "../repositories/EspecialidadeRepository";
 
 const medicoRepository = new MedicoRepository();
-const medicoService = new MedicoService(medicoRepository);
+const especialidadeRepository = new EspecialidadeRepository()
+const medicoService = new MedicoService(medicoRepository, especialidadeRepository);
 
 export const listarMedicos = async (req: Request, res: Response) => {
   try {
@@ -33,3 +35,22 @@ export const excluirMedico = async (req: Request, res: Response) => {
     return res.status(404).json({ error: error.message });
   }
 };
+
+export const getAllEspecialidades = async (req: Request, res: Response) => {
+  try {
+    const data = await medicoService.getAllEspecialidades();
+    return res.status(200).json({message: "Especialidades listadas com sucesso", data: data})
+  } catch (error: any) {
+    return res.status(404).json({ error: error.message });
+  }
+}
+
+export const getMedicosByEspecialidadeId = async (req: Request, res: Response) => {
+  try {
+    const id = Number(req.params.id);
+    const data = await medicoService.getMedicosByEspecialidadeId(id);
+    return res.status(200).json({ message: "Medicos listados com sucesso", data: data})
+  } catch (error: any) {
+    return res.status(404).json({ error: error.message });
+  }
+}

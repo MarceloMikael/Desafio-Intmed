@@ -1,9 +1,11 @@
 import { Request, Response } from "express";
 import { ConsultaRepository } from "../repositories/ConsultaRepository";
 import { ConsultaService } from "../services/ConsultaService";
+import { AgendaRepository } from "../repositories/AgendaRepository";
 
+const agendaRepository = new AgendaRepository()
 const consultaRepository = new ConsultaRepository();
-const consultaService = new ConsultaService(consultaRepository);
+const consultaService = new ConsultaService(consultaRepository, agendaRepository);
 
 export const listarConsultas = async (req: Request, res: Response) => {
   try {
@@ -17,8 +19,8 @@ export const listarConsultas = async (req: Request, res: Response) => {
 export const criarConsulta = async (req: Request, res: Response) => {
   try {
     const consulta = req.body;
-    const ids = await consultaService.createConsulta(consulta);
-    return res.status(201).json({ id: ids[0], message: "Consulta criada com sucesso" });
+    const data = await consultaService.createConsulta(consulta);
+    return res.status(201).json({ data: data, message: "Consulta criada com sucesso" });
   } catch (error: any) {
     return res.status(400).json({ error: error.message });
   }

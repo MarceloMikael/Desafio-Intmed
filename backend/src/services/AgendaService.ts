@@ -32,9 +32,17 @@ export class AgendaService {
     await this.agendaRepository.deleteAgenda(id);
   }
 
+  async getByMedicoId(id: number): Promise<Agenda[] | undefined> {
+    return this.agendaRepository.getByMedicoId(id);
+  }
 
   async getAll(): Promise<Agenda[]> {
     return this.agendaRepository.getAll();
   }
+
+
+    async getById(id: number): Promise<Agenda[]> {
+        return this.agendaRepository.getById(id);
+    }
 
 }
