@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "ts-node src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "migrate:latest": "NODE_OPTIONS='-r ts-node/register' knex migrate:latest --knexfile knexfile.ts",
+    "migrate:rollback": "NODE_OPTIONS='-r ts-node/register' knex migrate:rollback --knexfile knexfile.ts",
+    "migrate:make": "NODE_OPTIONS='-r ts-node/register' knex migrate:make --knexfile knexfile.ts"
   },
   "author": "",
   "license": "ISC",
