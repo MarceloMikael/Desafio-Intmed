@@ -36,5 +36,7 @@ COPY --from=builder /app/dist ./dist
 EXPOSE 3000
 
 # Comando para iniciar o servidor
-CMD ["npm", "run", "start:prod"]
+COPY wait-for-postgres.sh /wait-for-postgres.sh
+RUN chmod +x /wait-for-postgres.sh
+CMD ["/wait-for-postgres.sh", "postgres", "npm", "run", "start:prod"]
 
