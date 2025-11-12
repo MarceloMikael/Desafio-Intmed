@@ -24,7 +24,7 @@ import { Consulta } from './entities/consulta.entity';
       password: process.env.DB_PASSWORD || '1234',
       database: process.env.DB_NAME || 'postgres',
       entities: [Usuario, Especialidade, Medico, Agenda, Consulta],
-      synchronize: false,
+      synchronize: true,
       logging: process.env.NODE_ENV === 'development',
     }),
     AuthModule,

@@ -3,51 +3,73 @@ import TabelaConsultas from "../components/TabelaConsultas";
 import NovaConsulta from "../components/NovaConsulta";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../config/api";
 
-export default function ConsultasPage( {onLogout} ) {
+export default function ConsultasPage({ onLogout }) {
   const [usuario, setUsuario] = useState();
   const [consultas, setConsultas] = useState([]);
   const [modalAberto, setModalAberto] = useState(false);
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   useEffect(() => {
     const userData = localStorage.getItem("usuario");
-    if (userData) {
+    const token = localStorage.getItem("token");
+    if (userData && token) {
       setUsuario(JSON.parse(userData));
     } else {
-      navigate("/", { replace: true });
+      navigate("/login", { replace: true });
     }
   }, [navigate]);
 
   useEffect(() => {
     const buscarConsultas = async () => {
       try {
-        const response = await axios.get("http://localhost:3000/consultas");
+        const response = await api.get("/consultas");
         setConsultas(response.data);
       } catch (error) {
         console.error("Erro ao buscar consultas:", error);
+        if (error.response?.status === 401) {
+          onLogout();
+        }
       }
     };
 
-    buscarConsultas();
-  }, []);
+    const token = localStorage.getItem("token");
+    if (token) {
+      buscarConsultas();
+    }
+  }, [onLogout]);
 
   const handleAdd = () => setModalAberto(true);
 
   const handleCancel = async (id) => {
     try {
-      await axios.delete(`http://localhost:3000/consultas/${id}`);
+      await api.delete(`/consultas/${id}`);
       setConsultas((prev) => prev.filter((c) => c.id !== id));
     } catch (error) {
       console.error("Erro ao cancelar consulta:", error);
+      alert("Erro ao cancelar consulta. Tente novamente.");
     }
   };
 
   const handleLogout = () => {
     localStorage.removeItem("usuario");
-    onLogout()
-    navigate("/", { replace: true });
+    localStorage.removeItem("token");
+    onLogout();
+    navigate("/login", { replace: true });
+  };
+
+  const handleConsultaCriada = () => {
+    // Recarregar consultas após criar uma nova
+    const buscarConsultas = async () => {
+      try {
+        const response = await api.get("/consultas");
+        setConsultas(response.data);
+      } catch (error) {
+        console.error("Erro ao buscar consultas:", error);
+      }
+    };
+    buscarConsultas();
   };
 
 
@@ -65,6 +87,7 @@ export default function ConsultasPage( {onLogout} ) {
       {modalAberto && (
         <NovaConsulta
           onClose={() => setModalAberto(false)}
+          onConsultaCriada={handleConsultaCriada}
         />
       )}
     </div>
