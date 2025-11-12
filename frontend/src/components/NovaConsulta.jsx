@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../config/api";
 
-export default function NovaConsulta({ onClose }) {
+export default function NovaConsulta({ onClose, onConsultaCriada }) {
   const [especialidades, setEspecialidades] = useState([]);
   const [medicos, setMedicos] = useState([]);
   const [agendas, setAgendas] = useState([]);
@@ -13,8 +13,8 @@ export default function NovaConsulta({ onClose }) {
   const [horario, setHorario] = useState("");
 
   useEffect(() => {
-    axios
-      .get("http://localhost:3000/medicos/especialidades")
+    api
+      .get("/medicos/especialidades")
       .then((res) => setEspecialidades(res.data.data))
       .catch((err) => console.error("Erro ao buscar especialidades:", err));
   }, []);
@@ -30,8 +30,8 @@ export default function NovaConsulta({ onClose }) {
       return;
     }
 
-    axios
-      .get(`http://localhost:3000/medicos/especialidades/${especialidade}`)
+    api
+      .get(`/medicos/especialidades/${especialidade}`)
       .then((res) => setMedicos(res.data.data))
       .catch((err) => console.error("Erro ao buscar médicos:", err));
   }, [especialidade]);
@@ -45,8 +45,8 @@ export default function NovaConsulta({ onClose }) {
       return;
     }
 
-    axios
-      .get(`http://localhost:3000/agendas/medicos/${medico}`)
+    api
+      .get(`/agendas/medicos/${medico}`)
       .then((res) => setAgendas(res.data.data))
       .catch((err) => console.error("Erro ao buscar agendas:", err));
   }, [medico]);
@@ -78,8 +78,7 @@ export default function NovaConsulta({ onClose }) {
       if (!agendaSelecionada) {
         return;
       }
-      const response = await axios.post("http://localhost:3000/consultas", {
-        especialidade_id: Number(especialidade),
+      const response = await api.post("/consultas", {
         medico_id: Number(medico),
         dia: agendaSelecionada.dia,
         horario,
@@ -89,10 +88,14 @@ export default function NovaConsulta({ onClose }) {
       setMedico("");
       setAgenda("");
       setHorario("");
-      
+      onClose();
+      if (onConsultaCriada) {
+        onConsultaCriada();
+      }
     } catch (error) {
       console.error("Erro ao criar consulta:", error);
-      alert("Não foi possível criar a consulta.");
+      const errorMessage = error.response?.data?.message || "Não foi possível criar a consulta.";
+      alert(errorMessage);
     }
   };
 

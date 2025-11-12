@@ -107,10 +107,25 @@ export class AgendaService {
   }
 
   async getByMedicoId(medicoId: number) {
-    return this.agendaRepository.find({
+    const hoje = new Date().toISOString().split('T')[0];
+    const agora = new Date().toTimeString().slice(0, 5);
+
+    const agendas = await this.agendaRepository.find({
       where: { medicoId },
       relations: ['medico'],
+      order: { dia: 'ASC' },
     });
+
+    const agendasFiltradas = agendas
+      .map((agenda) => {
+        if (agenda.dia === hoje) {
+          agenda.horarios = agenda.horarios.filter((horario: string) => horario > agora);
+        }
+        return agenda;
+      })
+      .filter((agenda) => agenda.dia > hoje || (agenda.dia === hoje && agenda.horarios.length > 0));
+
+    return agendasFiltradas;
   }
 
   async getById(id: number) {
