@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Delete, Param, Body, ParseIntPipe, HttpCode, HttpStatus } from '@nestjs/common';
 import { MedicoService } from './medico.service';
 import { CreateMedicoDto } from './dto/create-medico.dto';
+import { CreateEspecialidadeDto } from './dto/create-especialidade.dto';
 
 @Controller('medicos')
 export class MedicoController {
@@ -35,6 +36,23 @@ export class MedicoController {
       message: 'Especialidades listadas com sucesso',
       data,
     };
+  }
+
+  @Post('especialidades')
+  @HttpCode(HttpStatus.CREATED)
+  async criarEspecialidade(@Body() createEspecialidadeDto: CreateEspecialidadeDto) {
+    const result = await this.medicoService.createEspecialidade(createEspecialidadeDto.nome);
+    return {
+      id: result.id,
+      message: 'Especialidade criada com sucesso',
+    };
+  }
+
+  @Delete('especialidades/:id')
+  @HttpCode(HttpStatus.OK)
+  async excluirEspecialidade(@Param('id', ParseIntPipe) id: number) {
+    await this.medicoService.deleteEspecialidade(id);
+    return { message: 'Especialidade excluída com sucesso' };
   }
 
   @Get('especialidades/:id')

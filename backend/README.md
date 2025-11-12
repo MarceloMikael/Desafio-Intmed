@@ -352,6 +352,66 @@ Lista todas as especialidades disponíveis.
 }
 ```
 
+#### POST `/medicos/especialidades`
+Cria uma nova especialidade.
+
+**Body:**
+```json
+{
+  "nome": "Cardiologia"
+}
+```
+
+**Validações:**
+- Nome é obrigatório
+- Nome deve ter no máximo 100 caracteres
+- Nome deve ser único
+
+**Resposta (201):**
+```json
+{
+  "id": 1,
+  "message": "Especialidade criada com sucesso"
+}
+```
+
+**Erro (409):**
+```json
+{
+  "statusCode": 409,
+  "message": "Especialidade já cadastrada!"
+}
+```
+
+#### DELETE `/medicos/especialidades/:id`
+Exclui uma especialidade.
+
+**Validações:**
+- Especialidade não pode ter médicos cadastrados
+
+**Resposta (200):**
+```json
+{
+  "message": "Especialidade excluída com sucesso"
+}
+```
+
+**Erro (404):**
+```json
+{
+  "statusCode": 404,
+  "message": "Especialidade não encontrada!"
+}
+```
+
+**Erro (409):**
+```json
+{
+  "statusCode": 409,
+  "message": "Não é possível excluir uma especialidade que possui médicos cadastrados!"
+}
+```
+
 #### GET `/medicos/especialidades/:id`
 Lista médicos de uma especialidade específica.
 

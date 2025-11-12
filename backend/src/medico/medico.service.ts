@@ -77,5 +77,36 @@ export class MedicoService {
       relations: ['especialidade'],
     });
   }
+
+  async createEspecialidade(nome: string) {
+    const especialidadeExistente = await this.especialidadeRepository.findOne({
+      where: { nome },
+    });
+
+    if (especialidadeExistente) {
+      throw new ConflictException('Especialidade já cadastrada!');
+    }
+
+    const especialidade = this.especialidadeRepository.create({ nome });
+    const savedEspecialidade = await this.especialidadeRepository.save(especialidade);
+    return { id: savedEspecialidade.id };
+  }
+
+  async deleteEspecialidade(id: number) {
+    const especialidade = await this.especialidadeRepository.findOne({
+      where: { id },
+      relations: ['medicos'],
+    });
+
+    if (!especialidade) {
+      throw new NotFoundException('Especialidade não encontrada!');
+    }
+
+    if (especialidade.medicos && especialidade.medicos.length > 0) {
+      throw new ConflictException('Não é possível excluir uma especialidade que possui médicos cadastrados!');
+    }
+
+    await this.especialidadeRepository.remove(especialidade);
+  }
 }
 
