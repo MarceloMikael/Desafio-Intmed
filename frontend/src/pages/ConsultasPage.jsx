@@ -60,7 +60,6 @@ export default function ConsultasPage({ onLogout }) {
   };
 
   const handleConsultaCriada = () => {
-    // Recarregar consultas após criar uma nova
     const buscarConsultas = async () => {
       try {
         const response = await api.get("/consultas");

@@ -18,7 +18,6 @@ export default function CadastroPage() {
     try {
       const response = await api.post("/auth/cadastro", { nome, email, senha });
       if (response.data.usuario) {
-        // Redirecionar para login após cadastro bem-sucedido
         navigate("/login", { state: { message: "Cadastro realizado com sucesso! Faça login para continuar." } });
       }
     } catch (err) {
