@@ -12,6 +12,8 @@ API REST desenvolvida em Node.js com TypeScript, Express e PostgreSQL para geren
 - [Configuração](#configuração)
 - [Banco de Dados](#banco-de-dados)
 - [Executando o Projeto](#executando-o-projeto)
+  - [Com Docker (Recomendado)](#com-docker-recomendado)
+  - [Sem Docker (Desenvolvimento Local)](#sem-docker-desenvolvimento-local)
 - [Endpoints da API](#endpoints-da-api)
 - [Estrutura do Projeto](#estrutura-do-projeto)
 
@@ -51,9 +53,14 @@ Controllers → Services → Repositories → Database
 
 ## 📦 Pré-requisitos
 
+### Para executar com Docker (Recomendado):
+- Docker instalado
+- Docker Compose instalado
+
+### Para executar localmente:
 - Node.js (versão 18 ou superior)
 - npm ou yarn
-- PostgreSQL (ou Docker para rodar via docker-compose)
+- PostgreSQL
 - Git
 
 ## 🚀 Instalação
@@ -86,25 +93,9 @@ JWT_SECRET=seu_secret_key_aqui
 
 ## 🗄 Banco de Dados
 
-### Usando Docker Compose (Recomendado)
+### Tabelas do Sistema
 
-Na raiz do projeto, execute:
-
-```bash
-docker-compose up -d
-```
-
-Isso iniciará o PostgreSQL em um container Docker.
-
-### Executando Migrações
-
-Após configurar o banco de dados, execute as migrações:
-
-```bash
-npm run migrate:latest
-```
-
-Isso criará automaticamente as seguintes tabelas:
+O sistema utiliza as seguintes tabelas:
 - `especialidade` - Especialidades médicas
 - `medico` - Dados dos médicos
 - `agenda` - Agendas e horários disponíveis
@@ -117,25 +108,128 @@ Isso criará automaticamente as seguintes tabelas:
 - `npm run migrate:rollback` - Reverte a última migração
 - `npm run migrate:make` - Cria uma nova migração
 
+**Nota**: Ao usar Docker, as migrações são executadas automaticamente na inicialização do container.
+
 ## ▶️ Executando o Projeto
 
-### Modo Desenvolvimento
+### Com Docker (Recomendado)
 
+Esta é a forma mais simples e recomendada de executar o projeto, pois configura automaticamente o PostgreSQL e o backend.
+
+#### Opção 1: Usando Docker Compose (Recomendado)
+
+Na **raiz do projeto** (não dentro da pasta backend), execute:
+
+```bash
+docker-compose up -d
+```
+
+Isso irá:
+- Criar e iniciar o container do PostgreSQL
+- Construir a imagem do backend
+- Executar as migrações automaticamente
+- Iniciar o servidor backend
+
+O backend estará disponível em `http://localhost:3000`
+
+#### Opção 2: Usando Scripts do package.json
+
+No diretório `backend`, você pode usar os scripts Docker:
+
+```bash
+# Iniciar todos os serviços (postgres + backend)
+npm run docker:up
+
+# Ver logs do backend
+npm run docker:logs
+
+# Parar todos os serviços
+npm run docker:down
+
+# Reiniciar apenas o backend
+npm run docker:restart
+```
+
+#### Opção 3: Build Manual da Imagem
+
+```bash
+cd backend
+
+# Construir a imagem
+npm run docker:build
+
+# Executar o container (requer PostgreSQL rodando separadamente)
+npm run docker:run
+```
+
+#### Gerenciando os Containers
+
+```bash
+# Ver status dos containers
+docker-compose ps
+
+# Ver logs de todos os serviços
+docker-compose logs -f
+
+# Ver logs apenas do backend
+docker-compose logs -f backend
+
+# Parar todos os serviços
+docker-compose down
+
+# Parar e remover volumes (apaga dados do banco)
+docker-compose down -v
+
+# Reconstruir a imagem do backend após mudanças
+docker-compose up -d --build backend
+```
+
+#### Variáveis de Ambiente com Docker
+
+Crie um arquivo `.env` na **raiz do projeto** (não na pasta backend) para personalizar as configurações:
+
+```env
+DB_USER=postgres
+DB_PASSWORD=1234
+DB_NAME=postgres
+DB_PORT=5432
+BACKEND_PORT=3000
+JWT_SECRET=seu-secret-key-aqui
+NODE_ENV=production
+```
+
+**Importante**: No Docker, o `DB_HOST` é automaticamente configurado como `postgres` (nome do serviço no docker-compose), não `localhost`.
+
+### Sem Docker (Desenvolvimento Local)
+
+#### Pré-requisitos
+- PostgreSQL instalado e rodando localmente
+- Node.js e npm instalados
+
+#### Passos
+
+1. **Configure o banco de dados**:
+   - Crie um banco de dados PostgreSQL
+   - Configure as variáveis de ambiente no arquivo `.env` (veja seção [Configuração](#⚙️-configuração))
+
+2. **Execute as migrações**:
+```bash
+npm run migrate:latest
+```
+
+3. **Modo Desenvolvimento**:
 ```bash
 npm run dev
 ```
 
 O servidor estará disponível em `http://localhost:3000`
 
-### Modo Produção
-
-1. Compile o TypeScript:
+4. **Modo Produção**:
 ```bash
+# Compile o TypeScript
 npm run build
-```
 
-2. Execute o servidor:
-```bash
+# Execute o servidor
 npm start
 ```
 
@@ -447,11 +541,15 @@ backend/
 │   │   ├── LoginService.ts
 │   │   └── MedicoService.ts
 │   └── server.ts                # Arquivo principal do servidor
-├── knexfile.ts                  # Configuração do Knex para migrações
+├── Dockerfile                    # Configuração Docker para o backend
+├── .dockerignore                 # Arquivos ignorados no build Docker
+├── knexfile.ts                   # Configuração do Knex para migrações
 ├── package.json
 ├── tsconfig.json
 └── README.md
 ```
+
+**Nota**: O arquivo `docker-compose.yml` está na raiz do projeto (não dentro da pasta backend).
 
 ## 🔒 Segurança
 
@@ -470,17 +568,55 @@ backend/
 ## 🐛 Troubleshooting
 
 ### Erro de conexão com o banco
-- Verifique se o PostgreSQL está rodando
+
+**Com Docker:**
+- Verifique se os containers estão rodando: `docker-compose ps`
+- Verifique os logs do PostgreSQL: `docker-compose logs postgres`
+- Certifique-se de que o backend está aguardando o PostgreSQL ficar saudável (healthcheck)
+- Verifique se o `DB_HOST` está configurado como `postgres` (nome do serviço) e não `localhost`
+
+**Sem Docker:**
+- Verifique se o PostgreSQL está rodando localmente
 - Confirme as credenciais no arquivo `.env`
-- Se estiver usando Docker, verifique se o container está ativo: `docker-compose ps`
+- Verifique se o `DB_HOST` está configurado como `localhost`
 
 ### Erro ao executar migrações
+
+**Com Docker:**
+- As migrações são executadas automaticamente na inicialização
+- Se falharem, verifique os logs: `docker-compose logs backend`
+- Execute manualmente dentro do container: `docker-compose exec backend npm run migrate:latest`
+
+**Sem Docker:**
 - Certifique-se de que o banco de dados existe
 - Verifique se as credenciais estão corretas
 - Execute `npm run migrate:rollback` se houver problemas e tente novamente
 
 ### Porta 3000 já em uso
+
+**Com Docker:**
+- Altere a variável `BACKEND_PORT` no arquivo `.env` ou docker-compose.yml
+- Pare o container que está usando a porta: `docker-compose down`
+
+**Sem Docker:**
 - Altere a porta no arquivo `server.ts` ou pare o processo que está usando a porta
+
+### Problemas com Docker
+
+**Container não inicia:**
+- Verifique os logs: `docker-compose logs backend`
+- Reconstrua a imagem: `docker-compose up -d --build backend`
+- Verifique se há erros de sintaxe no código
+
+**Imagem não é construída:**
+- Verifique se o Dockerfile está no diretório correto (`backend/Dockerfile`)
+- Limpe o cache do Docker: `docker system prune -a`
+- Tente construir manualmente: `cd backend && npm run docker:build`
+
+**Backend não consegue conectar ao banco:**
+- Verifique se ambos os serviços estão na mesma rede Docker
+- Confirme que o `DB_HOST` está como `postgres` (não `localhost`)
+- Verifique se o PostgreSQL está saudável: `docker-compose ps`
 
 ## 📄 Licença
 
