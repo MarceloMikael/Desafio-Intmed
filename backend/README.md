@@ -1,6 +1,6 @@
 # Backend - Sistema de Agendamento de Consultas Médicas
 
-API REST desenvolvida em Node.js com TypeScript, Express e PostgreSQL para gerenciamento de agendamentos de consultas médicas.
+API REST desenvolvida em Node.js com TypeScript, NestJS, TypeORM e PostgreSQL para gerenciamento de agendamentos de consultas médicas.
 
 ## 📋 Índice
 
@@ -31,25 +31,29 @@ Sistema de agendamento de consultas médicas que permite:
 
 - **Node.js** - Runtime JavaScript
 - **TypeScript** - Linguagem de programação
-- **Express** - Framework web
-- **Knex.js** - Query builder e migrações
+- **NestJS** - Framework Node.js progressivo
+- **TypeORM** - ORM para TypeScript e JavaScript
 - **PostgreSQL** - Banco de dados relacional
 - **JWT** - Autenticação via tokens
 - **bcrypt** - Criptografia de senhas
+- **class-validator** - Validação de DTOs
+- **class-transformer** - Transformação de objetos
 - **CORS** - Controle de acesso cross-origin
 
 ## 🏗 Arquitetura
 
-O projeto segue uma arquitetura em camadas:
+O projeto segue a arquitetura modular do NestJS:
 
 ```
-Controllers → Services → Repositories → Database
+Controllers → Services → TypeORM Entities → PostgreSQL
 ```
 
-- **Controllers**: Recebem requisições HTTP e retornam respostas
+- **Controllers**: Recebem requisições HTTP, validam DTOs e retornam respostas
 - **Services**: Contêm a lógica de negócio e validações
-- **Repositories**: Abstraem o acesso ao banco de dados
-- **Database**: Configuração do Knex e conexão com PostgreSQL
+- **Entities (TypeORM)**: Representam as tabelas do banco de dados
+- **DTOs**: Objetos de transferência de dados com validação automática
+- **Modules**: Organizam a aplicação em módulos funcionais
+- **Database**: TypeORM gerencia a conexão e queries com PostgreSQL
 
 ## 📦 Pré-requisitos
 
@@ -102,13 +106,16 @@ O sistema utiliza as seguintes tabelas:
 - `consulta` - Consultas agendadas
 - `usuario` - Usuários do sistema
 
-### Scripts de Migração
+### Migrações do Banco de Dados
 
-- `npm run migrate:latest` - Executa todas as migrações pendentes
-- `npm run migrate:rollback` - Reverte a última migração
-- `npm run migrate:make` - Cria uma nova migração
+O projeto utiliza TypeORM para gerenciar o banco de dados. As tabelas já existentes (criadas anteriormente) são utilizadas diretamente.
 
-**Nota**: Ao usar Docker, as migrações são executadas automaticamente na inicialização do container.
+**Scripts disponíveis:**
+- `npm run migration:generate` - Gera uma nova migração baseada nas entities
+- `npm run migration:run` - Executa migrações pendentes
+- `npm run migration:revert` - Reverte a última migração
+
+**Nota**: O TypeORM está configurado com `synchronize: false` para usar as tabelas existentes. Em desenvolvimento, você pode habilitar `synchronize: true` no `app.module.ts` para sincronização automática.
 
 ## ▶️ Executando o Projeto
 
@@ -511,39 +518,44 @@ Exclui uma consulta.
 ```
 backend/
 ├── src/
-│   ├── config/
-│   │   └── database.ts          # Configuração do Knex
-│   ├── controllers/             # Controladores HTTP
-│   │   ├── agendaController.ts
-│   │   ├── AuthController.ts
-│   │   ├── consultaController.ts
-│   │   └── medicoController.ts
-│   ├── migrations/              # Migrações do banco de dados
-│   │   ├── 001_create_especialidade.ts
-│   │   ├── 002_create_medico.ts
-│   │   ├── 003_create_agenda.ts
-│   │   └── 004_create_consulta.ts
-│   ├── repositories/           # Camada de acesso a dados
-│   │   ├── AgendaRepository.ts
-│   │   ├── ConsultaRepository.ts
-│   │   ├── EspecialidadeRepository.ts
-│   │   ├── MedicoRepository.ts
-│   │   └── UsuarioRepository.ts
-│   ├── routes/                  # Definição de rotas
-│   │   ├── agendaRoutes.ts
-│   │   ├── authRoutes.ts
-│   │   ├── consultaRoutes.ts
-│   │   ├── index.ts
-│   │   └── medicoRoutes.ts
-│   ├── services/                # Lógica de negócio
-│   │   ├── AgendaService.ts
-│   │   ├── ConsultaService.ts
-│   │   ├── LoginService.ts
-│   │   └── MedicoService.ts
-│   └── server.ts                # Arquivo principal do servidor
-├── Dockerfile                    # Configuração Docker para o backend
-├── .dockerignore                 # Arquivos ignorados no build Docker
-├── knexfile.ts                   # Configuração do Knex para migrações
+│   ├── agenda/                  # Módulo de Agendas
+│   │   ├── dto/
+│   │   │   └── create-agenda.dto.ts
+│   │   ├── agenda.controller.ts
+│   │   ├── agenda.module.ts
+│   │   └── agenda.service.ts
+│   ├── auth/                    # Módulo de Autenticação
+│   │   ├── dto/
+│   │   │   ├── cadastro.dto.ts
+│   │   │   └── login.dto.ts
+│   │   ├── auth.controller.ts
+│   │   ├── auth.module.ts
+│   │   └── auth.service.ts
+│   ├── consulta/                # Módulo de Consultas
+│   │   ├── dto/
+│   │   │   └── create-consulta.dto.ts
+│   │   ├── interceptors/
+│   │   │   └── consulta-format.interceptor.ts
+│   │   ├── consulta.controller.ts
+│   │   ├── consulta.module.ts
+│   │   └── consulta.service.ts
+│   ├── entities/                # Entities do TypeORM
+│   │   ├── agenda.entity.ts
+│   │   ├── consulta.entity.ts
+│   │   ├── especialidade.entity.ts
+│   │   ├── medico.entity.ts
+│   │   └── usuario.entity.ts
+│   ├── medico/                  # Módulo de Médicos
+│   │   ├── dto/
+│   │   │   └── create-medico.dto.ts
+│   │   ├── medico.controller.ts
+│   │   ├── medico.module.ts
+│   │   └── medico.service.ts
+│   ├── app.module.ts            # Módulo principal
+│   └── main.ts                 # Arquivo de bootstrap
+├── Dockerfile                   # Configuração Docker para o backend
+├── .dockerignore                # Arquivos ignorados no build Docker
+├── nest-cli.json                # Configuração do NestJS CLI
 ├── package.json
 ├── tsconfig.json
 └── README.md
@@ -554,16 +566,21 @@ backend/
 ## 🔒 Segurança
 
 - Senhas são criptografadas usando bcrypt antes de serem armazenadas
-- Autenticação via JWT (JSON Web Tokens)
-- Validações de entrada em todos os endpoints
+- Autenticação via JWT (JSON Web Tokens) usando `@nestjs/jwt`
+- Validações automáticas de entrada em todos os endpoints via `class-validator`
+- DTOs (Data Transfer Objects) garantem validação de tipos e formatos
 - CORS configurado para permitir requisições do frontend
+- Validação global habilitada com `ValidationPipe` do NestJS
 
 ## 📝 Notas Importantes
 
 - As consultas listadas são apenas as futuras (data/horário no futuro)
-- Ao excluir um médico, todas suas agendas e consultas são excluídas automaticamente (CASCADE)
-- Os horários nas agendas são armazenados como array de strings (TEXT[])
+- Ao excluir um médico, todas suas agendas e consultas são excluídas automaticamente (CASCADE via TypeORM)
+- Os horários nas agendas são armazenados como array de strings (TEXT[] no PostgreSQL)
 - O sistema valida se o horário está disponível antes de criar uma consulta
+- Todas as validações de entrada são feitas automaticamente via `class-validator` nos DTOs
+- O TypeORM utiliza as tabelas existentes no banco (synchronize: false)
+- A aplicação segue o padrão modular do NestJS, facilitando manutenção e testes
 
 ## 🐛 Troubleshooting
 
@@ -580,17 +597,17 @@ backend/
 - Confirme as credenciais no arquivo `.env`
 - Verifique se o `DB_HOST` está configurado como `localhost`
 
-### Erro ao executar migrações
+### Erro ao conectar com TypeORM
 
 **Com Docker:**
-- As migrações são executadas automaticamente na inicialização
-- Se falharem, verifique os logs: `docker-compose logs backend`
-- Execute manualmente dentro do container: `docker-compose exec backend npm run migrate:latest`
+- Verifique se o PostgreSQL está rodando: `docker-compose ps`
+- Verifique os logs do backend: `docker-compose logs backend`
+- Confirme que as variáveis de ambiente estão corretas
 
 **Sem Docker:**
 - Certifique-se de que o banco de dados existe
-- Verifique se as credenciais estão corretas
-- Execute `npm run migrate:rollback` se houver problemas e tente novamente
+- Verifique se as credenciais no `.env` estão corretas
+- Verifique se as entities correspondem às tabelas existentes
 
 ### Porta 3000 já em uso
 
@@ -599,7 +616,7 @@ backend/
 - Pare o container que está usando a porta: `docker-compose down`
 
 **Sem Docker:**
-- Altere a porta no arquivo `server.ts` ou pare o processo que está usando a porta
+- Altere a porta no arquivo `main.ts` ou pare o processo que está usando a porta
 
 ### Problemas com Docker
 
